@@ -1,0 +1,72 @@
+{
+  "name": "NewsPost",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "title": "Title"
+    },
+    "slug": {
+      "type": "string",
+      "title": "URL slug"
+    },
+    "category": {
+      "type": "string",
+      "title": "Category"
+    },
+    "excerpt": {
+      "type": "string",
+      "title": "Excerpt"
+    },
+    "content": {
+      "type": "string",
+      "title": "Content"
+    },
+    "image_url": {
+      "type": "string",
+      "title": "Image URL"
+    },
+    "image_alt": {
+      "type": "string",
+      "title": "Image description"
+    },
+    "author": {
+      "type": "string",
+      "title": "Author"
+    },
+    "published_date": {
+      "type": "string",
+      "title": "Published date"
+    },
+    "is_featured": {
+      "type": "boolean",
+      "title": "Featured"
+    },
+    "is_published": {
+      "type": "boolean",
+      "title": "Published"
+    }
+  },
+  "required": [
+    "title",
+    "slug"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

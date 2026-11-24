@@ -1,0 +1,88 @@
+{
+  "name": "SiteSettings",
+  "type": "object",
+  "properties": {
+    "organization_name": {
+      "type": "string",
+      "title": "Organization name"
+    },
+    "tagline": {
+      "type": "string",
+      "title": "Tagline"
+    },
+    "intro": {
+      "type": "string",
+      "title": "Introduction"
+    },
+    "mission": {
+      "type": "string",
+      "title": "Mission statement"
+    },
+    "vision": {
+      "type": "string",
+      "title": "Vision statement"
+    },
+    "email": {
+      "type": "string",
+      "title": "Public email"
+    },
+    "phone": {
+      "type": "string",
+      "title": "Phone"
+    },
+    "address": {
+      "type": "string",
+      "title": "Office address"
+    },
+    "office_hours": {
+      "type": "string",
+      "title": "Office hours"
+    },
+    "bank_details": {
+      "type": "string",
+      "title": "Bank transfer instructions"
+    },
+    "registration_note": {
+      "type": "string",
+      "title": "Registration note"
+    },
+    "map_query": {
+      "type": "string",
+      "title": "Map location query"
+    },
+    "social_facebook": {
+      "type": "string",
+      "title": "Facebook URL"
+    },
+    "social_instagram": {
+      "type": "string",
+      "title": "Instagram URL"
+    },
+    "social_linkedin": {
+      "type": "string",
+      "title": "LinkedIn URL"
+    },
+    "social_youtube": {
+      "type": "string",
+      "title": "YouTube URL"
+    }
+  },
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

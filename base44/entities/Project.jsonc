@@ -1,0 +1,104 @@
+{
+  "name": "Project",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "title": "Project name"
+    },
+    "location": {
+      "type": "string",
+      "title": "Location"
+    },
+    "status": {
+      "type": "string",
+      "title": "Status",
+      "enum": [
+        "ongoing",
+        "completed",
+        "upcoming"
+      ],
+      "enumColors": [
+        "green",
+        "blue",
+        "yellow"
+      ]
+    },
+    "summary": {
+      "type": "string",
+      "title": "Short summary"
+    },
+    "description": {
+      "type": "string",
+      "title": "Description"
+    },
+    "objectives": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Objectives"
+    },
+    "image_url": {
+      "type": "string",
+      "title": "Main image URL"
+    },
+    "image_alt": {
+      "type": "string",
+      "title": "Image description"
+    },
+    "program_slug": {
+      "type": "string",
+      "title": "Related program slug"
+    },
+    "progress_percent": {
+      "type": "number",
+      "title": "Progress (%)"
+    },
+    "goal_amount": {
+      "type": "number",
+      "title": "Fundraising goal"
+    },
+    "currency": {
+      "type": "string",
+      "title": "Currency"
+    },
+    "start_date": {
+      "type": "string",
+      "title": "Start date"
+    },
+    "end_date": {
+      "type": "string",
+      "title": "End date"
+    },
+    "is_featured": {
+      "type": "boolean",
+      "title": "Featured on homepage"
+    },
+    "is_published": {
+      "type": "boolean",
+      "title": "Published"
+    }
+  },
+  "required": [
+    "title"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

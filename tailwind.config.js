@@ -46,6 +46,11 @@ export default {
   			border: 'hsl(var(--border))',
   			input: 'hsl(var(--input))',
   			ring: 'hsl(var(--ring))',
+  			forest: '#174D38',
+  			navy: '#173451',
+  			gold: '#D4AF37',
+  			mist: '#F7F9F7',
+  			sage: '#E9EEEB',
   			chart: {
   				'1': 'hsl(var(--chart-1))',
   				'2': 'hsl(var(--chart-2))',

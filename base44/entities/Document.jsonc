@@ -1,0 +1,65 @@
+{
+  "name": "Document",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "title": "Title"
+    },
+    "category": {
+      "type": "string",
+      "title": "Category",
+      "enum": [
+        "annual_report",
+        "financial_report",
+        "project_expenditure",
+        "governance",
+        "registration"
+      ],
+      "enumColors": [
+        "green",
+        "blue",
+        "purple",
+        "gray",
+        "yellow"
+      ]
+    },
+    "description": {
+      "type": "string",
+      "title": "Description"
+    },
+    "file_uri": {
+      "type": "string",
+      "title": "File reference"
+    },
+    "published_date": {
+      "type": "string",
+      "title": "Published date"
+    },
+    "is_published": {
+      "type": "boolean",
+      "title": "Published"
+    }
+  },
+  "required": [
+    "title"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

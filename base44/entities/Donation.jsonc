@@ -1,0 +1,127 @@
+{
+  "name": "Donation",
+  "type": "object",
+  "properties": {
+    "reference": {
+      "type": "string",
+      "title": "Reference code"
+    },
+    "donor_name": {
+      "type": "string",
+      "title": "Donor name"
+    },
+    "donor_email": {
+      "type": "string",
+      "title": "Donor email"
+    },
+    "donor_phone": {
+      "type": "string",
+      "title": "Donor phone"
+    },
+    "country": {
+      "type": "string",
+      "title": "Country"
+    },
+    "amount": {
+      "type": "number",
+      "title": "Amount"
+    },
+    "currency": {
+      "type": "string",
+      "title": "Currency"
+    },
+    "frequency": {
+      "type": "string",
+      "title": "Frequency",
+      "enum": [
+        "one_time",
+        "monthly"
+      ],
+      "enumColors": [
+        "blue",
+        "purple"
+      ]
+    },
+    "is_anonymous": {
+      "type": "boolean",
+      "title": "Anonymous"
+    },
+    "dedication": {
+      "type": "string",
+      "title": "Dedication message"
+    },
+    "campaign_id": {
+      "type": "string",
+      "title": "Campaign"
+    },
+    "project_id": {
+      "type": "string",
+      "title": "Project"
+    },
+    "payment_method": {
+      "type": "string",
+      "title": "Payment method"
+    },
+    "payment_reference": {
+      "type": "string",
+      "title": "Provider payment reference"
+    },
+    "status": {
+      "type": "string",
+      "title": "Status",
+      "enum": [
+        "pending",
+        "completed",
+        "failed",
+        "cancelled"
+      ],
+      "enumColors": [
+        "yellow",
+        "green",
+        "red",
+        "gray"
+      ]
+    },
+    "receipt_number": {
+      "type": "string",
+      "title": "Receipt number"
+    },
+    "verified_date": {
+      "type": "string",
+      "title": "Verification date"
+    },
+    "admin_notes": {
+      "type": "string",
+      "title": "Internal notes"
+    }
+  },
+  "required": [
+    "donor_name",
+    "donor_email",
+    "amount",
+    "currency",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

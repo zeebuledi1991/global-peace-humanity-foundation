@@ -1,0 +1,91 @@
+{
+  "name": "VolunteerApplication",
+  "type": "object",
+  "properties": {
+    "full_name": {
+      "type": "string",
+      "title": "Full name"
+    },
+    "email": {
+      "type": "string",
+      "title": "Email"
+    },
+    "phone": {
+      "type": "string",
+      "title": "Phone"
+    },
+    "country": {
+      "type": "string",
+      "title": "Country"
+    },
+    "city": {
+      "type": "string",
+      "title": "City"
+    },
+    "areas_of_interest": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Areas of interest"
+    },
+    "availability": {
+      "type": "string",
+      "title": "Availability"
+    },
+    "skills": {
+      "type": "string",
+      "title": "Skills and experience"
+    },
+    "motivation": {
+      "type": "string",
+      "title": "Motivation"
+    },
+    "status": {
+      "type": "string",
+      "title": "Status",
+      "enum": [
+        "new",
+        "reviewing",
+        "approved",
+        "declined"
+      ],
+      "enumColors": [
+        "blue",
+        "yellow",
+        "green",
+        "red"
+      ]
+    },
+    "admin_notes": {
+      "type": "string",
+      "title": "Internal notes"
+    }
+  },
+  "required": [
+    "full_name",
+    "email"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

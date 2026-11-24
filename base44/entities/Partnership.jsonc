@@ -1,0 +1,93 @@
+{
+  "name": "Partnership",
+  "type": "object",
+  "properties": {
+    "organization_name": {
+      "type": "string",
+      "title": "Organization"
+    },
+    "contact_name": {
+      "type": "string",
+      "title": "Contact name"
+    },
+    "email": {
+      "type": "string",
+      "title": "Email"
+    },
+    "phone": {
+      "type": "string",
+      "title": "Phone"
+    },
+    "country": {
+      "type": "string",
+      "title": "Country"
+    },
+    "partnership_type": {
+      "type": "string",
+      "title": "Partnership type",
+      "enum": [
+        "corporate",
+        "ngo",
+        "fundraising",
+        "project_sponsorship"
+      ],
+      "enumColors": [
+        "blue",
+        "green",
+        "purple",
+        "yellow"
+      ]
+    },
+    "message": {
+      "type": "string",
+      "title": "Message"
+    },
+    "status": {
+      "type": "string",
+      "title": "Status",
+      "enum": [
+        "new",
+        "reviewing",
+        "approved",
+        "declined"
+      ],
+      "enumColors": [
+        "blue",
+        "yellow",
+        "green",
+        "red"
+      ]
+    },
+    "admin_notes": {
+      "type": "string",
+      "title": "Internal notes"
+    }
+  },
+  "required": [
+    "organization_name",
+    "contact_name",
+    "email"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

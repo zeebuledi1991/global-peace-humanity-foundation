@@ -1,0 +1,63 @@
+{
+  "name": "Campaign",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "title": "Campaign title"
+    },
+    "description": {
+      "type": "string",
+      "title": "Description"
+    },
+    "goal_amount": {
+      "type": "number",
+      "title": "Goal amount"
+    },
+    "currency": {
+      "type": "string",
+      "title": "Currency"
+    },
+    "image_url": {
+      "type": "string",
+      "title": "Image URL"
+    },
+    "image_alt": {
+      "type": "string",
+      "title": "Image description"
+    },
+    "project_id": {
+      "type": "string",
+      "title": "Related project"
+    },
+    "is_featured": {
+      "type": "boolean",
+      "title": "Featured"
+    },
+    "is_active": {
+      "type": "boolean",
+      "title": "Active"
+    }
+  },
+  "required": [
+    "title"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

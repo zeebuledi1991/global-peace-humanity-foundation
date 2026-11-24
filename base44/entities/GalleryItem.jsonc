@@ -1,0 +1,67 @@
+{
+  "name": "GalleryItem",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "title": "Title"
+    },
+    "category": {
+      "type": "string",
+      "title": "Category"
+    },
+    "media_type": {
+      "type": "string",
+      "title": "Media type",
+      "enum": [
+        "photo",
+        "video"
+      ],
+      "enumColors": [
+        "blue",
+        "purple"
+      ]
+    },
+    "image_url": {
+      "type": "string",
+      "title": "Image URL"
+    },
+    "video_url": {
+      "type": "string",
+      "title": "Video URL"
+    },
+    "caption": {
+      "type": "string",
+      "title": "Caption"
+    },
+    "display_order": {
+      "type": "number",
+      "title": "Display order"
+    },
+    "is_published": {
+      "type": "boolean",
+      "title": "Published"
+    }
+  },
+  "required": [
+    "title"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
