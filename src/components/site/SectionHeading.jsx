@@ -10,7 +10,7 @@ export default function SectionHeading({ eyebrow, title, description, align = "l
       )}
     >
       {eyebrow && (
-        <p className="eyebrow flex items-center gap-3">
+        <p className={cn("eyebrow flex items-center gap-3", align === "center" && "justify-center")}>
           {align === "center" && <span className="hidden h-px w-8 bg-primary/40 sm:block" aria-hidden="true" />}
           {eyebrow}
           {align === "center" && <span className="hidden h-px w-8 bg-primary/40 sm:block" aria-hidden="true" />}

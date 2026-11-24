@@ -19,11 +19,11 @@ export default function ImpactSection({ stats = {} }) {
   return (
     <section className="relative overflow-hidden bg-primary py-16 text-white sm:py-20">
       <div className="shell relative">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <h2 className="max-w-xl text-balance text-[clamp(1.6rem,2.6vw,2.2rem)] leading-tight text-white">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <h2 className="max-w-2xl text-balance text-[clamp(1.6rem,2.6vw,2.2rem)] leading-tight text-white">
             How we work, in plain terms.
           </h2>
-          <p className="max-w-md text-[13px] leading-relaxed text-white/65">
+          <p className="max-w-xl text-[13px] leading-relaxed text-white/65">
             Verified beneficiary and financial figures are published only once confirmed. Until then,
             we show what is true today.
           </p>
