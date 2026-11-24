@@ -11,6 +11,7 @@ const OPTIONS = [
     to: "/volunteer",
     cta: "Become a volunteer",
     tone: "bg-primary text-white",
+    headingTone: "text-white",
     muted: "text-white/70",
     iconTone: "bg-white/10 text-white",
     ctaTone: "text-white hover:text-gold",
@@ -23,6 +24,7 @@ const OPTIONS = [
     to: "/partner",
     cta: "Become a partner",
     tone: "bg-sage text-foreground",
+    headingTone: "text-foreground",
     muted: "text-muted-foreground",
     iconTone: "bg-white text-primary",
     ctaTone: "text-primary hover:text-foreground",
@@ -43,7 +45,7 @@ export default function InvolvementSection() {
                 <p className={`mt-7 text-[11px] font-semibold uppercase tracking-[0.22em] ${option.muted}`}>
                   {option.eyebrow}
                 </p>
-                <h3 className="mt-3 text-balance text-[clamp(1.5rem,2.4vw,2rem)] leading-tight">
+                <h3 className={`mt-3 text-balance text-[clamp(1.5rem,2.4vw,2rem)] leading-tight ${option.headingTone}`}>
                   {option.title}
                 </h3>
                 <p className={`mt-4 flex-1 text-[15px] leading-relaxed ${option.muted}`}>{option.text}</p>
