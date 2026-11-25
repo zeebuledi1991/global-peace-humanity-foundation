@@ -6,14 +6,20 @@ import { cn } from "@/lib/utils";
 
 const STATUS_STYLES = {
   ongoing: "bg-primary/10 text-primary",
+  active: "bg-primary/10 text-primary",
   completed: "bg-navy/10 text-navy",
+  closed: "bg-navy/10 text-navy",
   upcoming: "bg-gold/15 text-[#7a5c10]",
+  paused: "bg-gold/15 text-[#7a5c10]",
 };
 
 const STATUS_LABELS = {
-  ongoing: "Ongoing",
+  ongoing: "Active",
+  active: "Active",
   completed: "Completed",
+  closed: "Closed",
   upcoming: "Upcoming",
+  paused: "Paused",
 };
 
 export default function ProjectCard({ project }) {

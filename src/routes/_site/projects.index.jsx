@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 const FILTERS = [
   { value: "", label: "All projects" },
-  { value: "ongoing", label: "Ongoing" },
+  { value: "active", label: "Active" },
   { value: "upcoming", label: "Upcoming" },
   { value: "completed", label: "Completed" },
 ];

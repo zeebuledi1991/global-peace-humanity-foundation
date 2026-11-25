@@ -13,6 +13,7 @@ const FILTERS = [
   { value: "completed", label: "Completed" },
   { value: "failed", label: "Failed" },
   { value: "cancelled", label: "Cancelled" },
+  { value: "refunded", label: "Refunded" },
 ];
 
 export const Route = createFileRoute("/_authed/admin/donations")({

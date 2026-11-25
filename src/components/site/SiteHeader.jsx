@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Menu, Heart } from "lucide-react";
+import { Menu, Heart, UserRound } from "lucide-react";
 import Logo from "@/components/site/Logo";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -68,6 +68,13 @@ export default function SiteHeader() {
 
         <div className="flex items-center gap-2">
           <Link
+            to="/portal"
+            className="hidden items-center gap-2 rounded-sm border border-border px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground transition-colors hover:border-primary hover:text-primary lg:inline-flex"
+          >
+            <UserRound className="h-3.5 w-3.5" aria-hidden="true" />
+            User Portal
+          </Link>
+          <Link
             to="/donate"
             className="inline-flex items-center gap-2 rounded-sm bg-primary px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-foreground transition-colors hover:bg-foreground"
           >
@@ -107,6 +114,13 @@ export default function SiteHeader() {
               >
                 <Heart className="h-4 w-4" aria-hidden="true" />
                 Donate Now
+              </Link>
+              <Link
+                to="/portal"
+                className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-sm border border-border px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground"
+              >
+                <UserRound className="h-4 w-4" aria-hidden="true" />
+                User Portal
               </Link>
             </SheetContent>
           </Sheet>

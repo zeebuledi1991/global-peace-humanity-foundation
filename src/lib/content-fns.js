@@ -39,7 +39,9 @@ export const getProjects = createServerFn({ method: "GET" }).handler(async ({ co
     }
     return acc;
   }, {});
-  return list(res).map((project) => ({ ...project, raised_amount: raised[project.id] || 0 }));
+  return list(res)
+    .filter((project) => project.status !== "draft")
+    .map((project) => ({ ...project, raised_amount: raised[project.id] || 0 }));
 });
 
 export const getProjectById = createServerFn({ method: "GET" })

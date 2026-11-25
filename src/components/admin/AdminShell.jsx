@@ -1,6 +1,7 @@
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
 import {
   BookOpen,
+  ClipboardList,
   FileText,
   FolderKanban,
   HandCoins,
@@ -12,30 +13,51 @@ import {
   MessageSquare,
   Newspaper,
   Settings,
+  ShieldCheck,
   Users,
+  Wallet,
 } from "lucide-react";
 import Logo from "@/components/site/Logo";
 import { useAuth } from "@/lib/AuthContext";
 import { cn } from "@/lib/utils";
 
+const ALL = ["super_admin", "administrator", "finance_manager", "project_manager"];
+const CONTENT = ["super_admin", "administrator"];
+const FINANCE = ["super_admin", "administrator", "finance_manager"];
+const PROJECTS = ["super_admin", "administrator", "project_manager"];
+const USER_MANAGEMENT = ["super_admin", "administrator"];
+
 const NAV = [
-  { to: "/admin", label: "Overview", icon: LayoutDashboard },
-  { to: "/admin/donations", label: "Donations", icon: HandCoins },
-  { to: "/admin/projects", label: "Projects", icon: FolderKanban },
-  { to: "/admin/programs", label: "Programs", icon: BookOpen },
-  { to: "/admin/campaigns", label: "Campaigns", icon: Megaphone },
-  { to: "/admin/news", label: "News & Stories", icon: Newspaper },
-  { to: "/admin/gallery", label: "Gallery", icon: Images },
-  { to: "/admin/documents", label: "Reports", icon: FileText },
-  { to: "/admin/volunteers", label: "Volunteers", icon: Users },
-  { to: "/admin/partnerships", label: "Partnerships", icon: Handshake },
-  { to: "/admin/messages", label: "Messages", icon: MessageSquare },
-  { to: "/admin/settings", label: "Site Settings", icon: Settings },
+  { to: "/admin", label: "Overview", icon: LayoutDashboard, roles: ALL },
+  { to: "/admin/finance", label: "Finance", icon: Wallet, roles: FINANCE },
+  { to: "/admin/donations", label: "Donations", icon: HandCoins, roles: FINANCE },
+  { to: "/admin/donors", label: "Donors", icon: Users, roles: ALL },
+  { to: "/admin/projects", label: "Projects", icon: FolderKanban, roles: PROJECTS },
+  { to: "/admin/programs", label: "Programs", icon: BookOpen, roles: CONTENT },
+  { to: "/admin/campaigns", label: "Campaigns", icon: Megaphone, roles: CONTENT },
+  { to: "/admin/news", label: "News & Stories", icon: Newspaper, roles: CONTENT },
+  { to: "/admin/gallery", label: "Gallery", icon: Images, roles: CONTENT },
+  { to: "/admin/documents", label: "Reports", icon: FileText, roles: CONTENT },
+  { to: "/admin/volunteers", label: "Volunteers", icon: Users, roles: CONTENT },
+  { to: "/admin/partnerships", label: "Partnerships", icon: Handshake, roles: CONTENT },
+  { to: "/admin/messages", label: "Messages", icon: MessageSquare, roles: CONTENT },
+  { to: "/admin/users", label: "Users & Access", icon: ShieldCheck, roles: USER_MANAGEMENT },
+  { to: "/admin/audit", label: "Audit Log", icon: ClipboardList, roles: USER_MANAGEMENT },
+  { to: "/admin/settings", label: "Site Settings", icon: Settings, roles: CONTENT },
 ];
+
+const ROLE_LABELS = {
+  super_admin: "Super Admin",
+  administrator: "Administrator",
+  finance_manager: "Finance Manager",
+  project_manager: "Project Manager",
+};
 
 export default function AdminShell({ user }) {
   const { logout } = useAuth();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const role = user?.admin_role || "super_admin";
+  const nav = NAV.filter((item) => item.roles.includes(role));
 
   return (
     <div className="min-h-screen bg-mist">
@@ -48,7 +70,7 @@ export default function AdminShell({ user }) {
                 <span className="block text-[10px] font-semibold uppercase tracking-[0.22em] text-gold">
                   GPHF Admin
                 </span>
-                <span className="block text-[12px] text-white/70">Management</span>
+                <span className="block text-[12px] text-white/70">{ROLE_LABELS[role] || "Management"}</span>
               </span>
             </Link>
             <button
@@ -62,7 +84,7 @@ export default function AdminShell({ user }) {
           </div>
 
           <nav className="flex gap-1 overflow-x-auto px-3 pb-4 lg:flex-col lg:overflow-visible lg:pb-6" aria-label="Admin navigation">
-            {NAV.map((item) => {
+            {nav.map((item) => {
               const active = item.to === "/admin" ? pathname === "/admin" : pathname.startsWith(item.to);
               return (
                 <Link

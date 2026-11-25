@@ -5,7 +5,14 @@ import CTABand from "@/components/site/CTABand";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { getProjectById } from "@/lib/content-fns";
 
-const STATUS_LABELS = { ongoing: "Ongoing", completed: "Completed", upcoming: "Upcoming" };
+const STATUS_LABELS = {
+  ongoing: "Active",
+  active: "Active",
+  paused: "Paused",
+  completed: "Completed",
+  closed: "Closed",
+  upcoming: "Upcoming",
+};
 
 export const Route = createFileRoute("/_site/projects/$projectId")({
   loader: ({ params }) => getProjectById({ data: { id: params.projectId } }),

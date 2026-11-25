@@ -30,10 +30,18 @@ export const submitDonation = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     if (honeypot(data.website)) return { reference: null, spam: true };
     const db = context.getBase44().asServiceRole;
+    const donor = await context
+      .getBase44()
+      .auth.me()
+      .catch(() => null);
+    const linked =
+      donor && String(donor.email || "").toLowerCase() === data.donor_email.toLowerCase() ? donor.id : "";
     const record = await db.entities.Donation.create({
       reference: reference("GPHF"),
       donor_name: data.donor_name,
       donor_email: data.donor_email,
+      user_id: linked,
+      donor_type: linked ? "registered" : "guest",
       donor_phone: data.donor_phone || "",
       country: data.country,
       amount: data.amount,
