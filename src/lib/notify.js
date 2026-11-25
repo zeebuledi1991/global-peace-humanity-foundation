@@ -1,5 +1,5 @@
-// Shared server helpers for in-app notifications and administrative audit trails.
-import { sendBrandedEmail } from "@/lib/mailer.server";
+// Shared helpers for in-app notifications and administrative audit trails.
+import { sendBrandedEmail } from "@/lib/mailer";
 
 export async function writeAudit(db, { actor, action, entity, recordId, details }) {
   if (!actor) return;

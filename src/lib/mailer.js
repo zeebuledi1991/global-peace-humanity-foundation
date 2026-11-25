@@ -1,4 +1,4 @@
-// Branded GPHF email rendering + delivery. Server-only.
+// Branded GPHF email rendering + delivery. Called only from server functions.
 export const BRAND = {
   forest: "#174D38",
   navy: "#173451",

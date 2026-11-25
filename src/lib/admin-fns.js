@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireUser } from "@/lib/auth-middleware";
-import { writeAudit, notifyUser, money } from "@/lib/notify.server";
-import { BRAND } from "@/lib/mailer.server";
+import { writeAudit, notifyUser, money } from "@/lib/notify";
+import { BRAND } from "@/lib/mailer";
 
 const list = (res) => (Array.isArray(res) ? res : res?.items ?? []);
 const lower = (value) => String(value ?? "").trim().toLowerCase();
