@@ -41,7 +41,7 @@ function AdminUsersPage() {
   const [values, setValues] = useState({ admin_role: "", account_status: "active", role: "user" });
   const [saving, setSaving] = useState(false);
 
-  const canManage = (user?.admin_role || "super_admin") === "super_admin";
+  const canManage = (user?.admin_role || "administrator") === "super_admin";
 
   const load = () => getAdminUsers({ data: { search } }).then(setRows);
 

@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_authed/admin/payments")({
 function PaymentsLayout() {
   const { user, isLoadingAuth } = useAuth();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const role = user?.admin_role || "super_admin";
+  const role = user?.admin_role || "administrator";
 
   if (isLoadingAuth) return null;
 

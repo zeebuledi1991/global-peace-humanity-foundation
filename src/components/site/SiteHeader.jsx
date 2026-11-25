@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Menu, Heart, UserRound } from "lucide-react";
+import { Menu, Heart, ShieldCheck, UserRound } from "lucide-react";
 import Logo from "@/components/site/Logo";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { useAuth } from "@/lib/AuthContext";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -24,6 +25,7 @@ const MORE = [
 ];
 
 export default function SiteHeader() {
+  const { user } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -67,6 +69,15 @@ export default function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
+          {user?.role === "admin" && (
+            <Link
+              to="/admin/dashboard"
+              className="hidden items-center gap-2 rounded-sm border border-navy/25 bg-navy/5 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-navy transition-colors hover:border-navy hover:bg-navy hover:text-white lg:inline-flex"
+            >
+              <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+              Admin dashboard
+            </Link>
+          )}
           <Link
             to="/portal"
             className="hidden items-center gap-2 rounded-sm border border-border px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground transition-colors hover:border-primary hover:text-primary lg:inline-flex"

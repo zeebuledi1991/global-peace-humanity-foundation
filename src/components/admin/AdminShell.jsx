@@ -8,6 +8,7 @@ import {
   HandCoins,
   Handshake,
   Images,
+  KeyRound,
   LayoutDashboard,
   LogOut,
   Megaphone,
@@ -15,6 +16,7 @@ import {
   Newspaper,
   Settings,
   ShieldCheck,
+  UserCog,
   Users,
   Wallet,
 } from "lucide-react";
@@ -27,9 +29,10 @@ const CONTENT = ["super_admin", "administrator"];
 const FINANCE = ["super_admin", "administrator", "finance_manager"];
 const PROJECTS = ["super_admin", "administrator", "project_manager"];
 const USER_MANAGEMENT = ["super_admin", "administrator"];
+const SUPER_ADMIN = ["super_admin"];
 
 const NAV = [
-  { to: "/admin", label: "Overview", icon: LayoutDashboard, roles: ALL },
+  { to: "/admin/dashboard", label: "Overview", icon: LayoutDashboard, roles: ALL },
   { to: "/admin/finance", label: "Finance", icon: Wallet, roles: FINANCE },
   { to: "/admin/donations", label: "Donations", icon: HandCoins, roles: FINANCE },
   { to: "/admin/payments", label: "Payment Management", icon: CreditCard, roles: FINANCE },
@@ -45,6 +48,8 @@ const NAV = [
   { to: "/admin/messages", label: "Messages", icon: MessageSquare, roles: CONTENT },
   { to: "/admin/users", label: "Users & Access", icon: ShieldCheck, roles: USER_MANAGEMENT },
   { to: "/admin/audit", label: "Audit Log", icon: ClipboardList, roles: USER_MANAGEMENT },
+  { to: "/admin/admin-management", label: "Admin Management", icon: UserCog, roles: SUPER_ADMIN },
+  { to: "/admin/super-admin-settings", label: "Account Settings", icon: KeyRound, roles: SUPER_ADMIN },
   { to: "/admin/settings", label: "Site Settings", icon: Settings, roles: CONTENT },
 ];
 
@@ -55,10 +60,11 @@ const ROLE_LABELS = {
   project_manager: "Project Manager",
 };
 
-export default function AdminShell({ user }) {
+export default function AdminShell({ user, adminRole }) {
   const { logout } = useAuth();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const role = user?.admin_role || "super_admin";
+  // The role comes from the server-verified session, never from the cached user.
+  const role = adminRole || user?.admin_role || "administrator";
   const nav = NAV.filter((item) => item.roles.includes(role));
 
   return (
@@ -66,7 +72,7 @@ export default function AdminShell({ user }) {
       <div className="mx-auto flex w-full max-w-[1500px] flex-col lg:flex-row">
         <aside className="border-b border-navy/20 bg-navy text-white lg:min-h-screen lg:w-[248px] lg:shrink-0 lg:border-b-0">
           <div className="flex items-center justify-between gap-3 px-5 py-5">
-            <Link to="/admin" className="flex items-center gap-2.5">
+            <Link to="/admin/dashboard" className="flex items-center gap-2.5">
               <Logo className="h-9 w-9" withText={false} tone="light" />
               <span className="leading-tight">
                 <span className="block text-[10px] font-semibold uppercase tracking-[0.22em] text-gold">
@@ -87,7 +93,7 @@ export default function AdminShell({ user }) {
 
           <nav className="flex gap-1 overflow-x-auto px-3 pb-4 lg:flex-col lg:overflow-visible lg:pb-6" aria-label="Admin navigation">
             {nav.map((item) => {
-              const active = item.to === "/admin" ? pathname === "/admin" : pathname.startsWith(item.to);
+              const active = pathname === item.to || pathname.startsWith(`${item.to}/`);
               return (
                 <Link
                   key={item.to}

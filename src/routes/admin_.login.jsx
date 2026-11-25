@@ -5,6 +5,8 @@ import { base44 } from "@/api/base44Client";
 import Logo from "@/components/site/Logo";
 import { adminButton, adminInput, adminLabel } from "@/components/admin/adminUi";
 import { continueMfa, loginWithMfa } from "@/lib/authMfa";
+import { getAdminSession, recordAdminSignIn } from "@/lib/admin-access-fns";
+import { checkLoginThrottle, clearLoginFailures, recordLoginFailure } from "@/lib/login-security-fns";
 
 export const Route = createFileRoute("/admin_/login")({
   ssr: false,
@@ -27,22 +29,54 @@ function AdminLoginPage() {
     event.preventDefault();
     setError("");
     setBusy(true);
+    const address = email.trim();
+
     try {
-      const result = await loginWithMfa(email.trim(), password);
-      if (result?.mfa_required) {
-        await continueMfa(result, "/admin");
-        return;
-      }
-      const me = await base44.auth.me();
-      if (me?.role !== "admin") {
-        await base44.auth.logout(window.location.origin);
-        setError("This account does not have administrator access to the GPHF dashboard.");
+      // Brute-force protection: an address is locked briefly after repeated failures.
+      const throttle = await checkLoginThrottle({ data: { email: address } }).catch(() => ({ blocked: false }));
+      if (throttle.blocked) {
+        setError(
+          `Too many failed attempts. Try again in ${throttle.minutes} minute${throttle.minutes === 1 ? "" : "s"}.`
+        );
         setBusy(false);
         return;
       }
-      window.location.href = "/admin";
+
+      const result = await loginWithMfa(address, password);
+      if (result?.mfa_required) {
+        await continueMfa(result, "/post-login");
+        return;
+      }
+
+      // The role is confirmed by the server, not by anything the browser holds.
+      const session = await getAdminSession().catch(() => null);
+      if (!session) {
+        setError("You are signed in, but we could not confirm your access. Please refresh the page.");
+        setBusy(false);
+        return;
+      }
+      if (!session.isAdmin) {
+        await clearLoginFailures({ data: { email: address } }).catch(() => {});
+        await base44.auth.logout(window.location.origin);
+        setError(
+          session?.reason === "deactivated"
+            ? "This administrator account has been deactivated. Contact the Super Admin."
+            : "This account does not have administrator access to the GPHF dashboard."
+        );
+        setBusy(false);
+        return;
+      }
+
+      await clearLoginFailures({ data: { email: address } }).catch(() => {});
+      await recordAdminSignIn().catch(() => {});
+      window.location.href = "/admin/dashboard";
     } catch (err) {
-      setError(err?.message || "We could not sign you in.");
+      const failure = await recordLoginFailure({ data: { email: address } }).catch(() => null);
+      setError(
+        failure?.blocked
+          ? `Too many failed attempts. Try again in ${failure.minutes} minutes.`
+          : err?.message || "We could not sign you in."
+      );
       setBusy(false);
     }
   };
@@ -120,6 +154,11 @@ function AdminLoginPage() {
                   placeholder="••••••••"
                 />
               </div>
+            </div>
+            <div className="flex items-center justify-end">
+              <Link to="/forgot-password" className="text-[11.5px] font-medium text-primary hover:underline">
+                Forgot password?
+              </Link>
             </div>
             <button type="submit" disabled={busy} className={`${adminButton} w-full`}>
               {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />}

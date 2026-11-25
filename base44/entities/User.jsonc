@@ -48,7 +48,7 @@
       "rls": {
         "update": {
           "user_condition": {
-            "role": "admin"
+            "data.admin_role": "super_admin"
           }
         }
       }
@@ -67,7 +67,18 @@
       "rls": {
         "update": {
           "user_condition": {
-            "role": "admin"
+            "data.admin_role": "super_admin"
+          }
+        }
+      }
+    },
+    "last_login_at": {
+      "type": "string",
+      "title": "Last administrator sign-in",
+      "rls": {
+        "update": {
+          "user_condition": {
+            "data.admin_role": "super_admin"
           }
         }
       }

@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth-middleware";
+import { requireCapability } from "@/lib/admin-guard";
 import { writeAudit, notifyUser, money } from "@/lib/notify";
 import { BRAND } from "@/lib/mailer";
 import { PROVIDERS, providerByKey } from "@/lib/payments/providers";
@@ -27,16 +28,10 @@ const paymentLabel = (donation) => {
   return donation.payment_method === "bank_transfer" ? "Bank transfer" : "Card";
 };
 
-// Only a super admin, administrator or finance manager may touch payment
+// Only a Super Admin, Administrator or Finance Manager may touch payment
 // configuration, credentials or financial verification. Project managers cannot.
-const PAYMENT_ROLES = ["super_admin", "administrator", "finance_manager"];
-const roleOf = (user) => user?.admin_role || "super_admin";
-
-function assertPayments(user) {
-  if (user?.role !== "admin" || !PAYMENT_ROLES.includes(roleOf(user))) {
-    throw Object.assign(new Error("Your administrator role does not allow payment management"), { status: 403 });
-  }
-}
+// The caller's current record is re-read on every request by the guard.
+const assertPayments = (context) => requireCapability(context, "finance");
 
 const reference = (prefix = "GPHF") =>
   `${prefix}-${crypto.randomUUID().replace(/-/g, "").slice(0, 8).toUpperCase()}`;
@@ -68,7 +63,7 @@ async function ensureGateways(db) {
 export const listGateways = createServerFn({ method: "GET" })
   .middleware([requireUser])
   .handler(async ({ context }) => {
-    assertPayments(context.user);
+    await assertPayments(context);
     const db = context.getBase44().asServiceRole;
     const gateways = await ensureGateways(db);
     const credentials = list(await db.entities.GatewayCredential.filter({}, { limit: 50 }));
@@ -117,7 +112,7 @@ export const saveGatewayCredentials = createServerFn({ method: "POST" })
   .middleware([requireUser])
   .inputValidator((data) => data)
   .handler(async ({ data, context }) => {
-    assertPayments(context.user);
+    await assertPayments(context);
     const rt = await loadPayments();
     const db = context.getBase44().asServiceRole;
     const gateway = await db.entities.PaymentGateway.get(String(data?.id || ""));
@@ -197,7 +192,7 @@ export const testGatewayConnection = createServerFn({ method: "POST" })
   .middleware([requireUser])
   .inputValidator((data) => data)
   .handler(async ({ data, context }) => {
-    assertPayments(context.user);
+    await assertPayments(context);
     const rt = await loadPayments();
     const db = context.getBase44().asServiceRole;
     const gateway = await db.entities.PaymentGateway.get(String(data?.id || ""));
@@ -239,7 +234,7 @@ export const setGatewayEnabled = createServerFn({ method: "POST" })
   .middleware([requireUser])
   .inputValidator((data) => data)
   .handler(async ({ data, context }) => {
-    assertPayments(context.user);
+    await assertPayments(context);
     const rt = await loadPayments();
     const db = context.getBase44().asServiceRole;
     const gateway = await db.entities.PaymentGateway.get(String(data?.id || ""));
@@ -278,7 +273,7 @@ export const setGatewayEnabled = createServerFn({ method: "POST" })
 export const listBankAccounts = createServerFn({ method: "GET" })
   .middleware([requireUser])
   .handler(async ({ context }) => {
-    assertPayments(context.user);
+    await assertPayments(context);
     const db = context.getBase44().asServiceRole;
     const accounts = list(await db.entities.BankAccount.filter({}, { limit: 50 }));
     return accounts.sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
@@ -288,7 +283,7 @@ export const saveBankAccount = createServerFn({ method: "POST" })
   .middleware([requireUser])
   .inputValidator((data) => data)
   .handler(async ({ data, context }) => {
-    assertPayments(context.user);
+    await assertPayments(context);
     const db = context.getBase44().asServiceRole;
     const payload = {
       bank_name: String(data?.bank_name || "").trim(),
@@ -326,7 +321,7 @@ export const deleteBankAccount = createServerFn({ method: "POST" })
   .middleware([requireUser])
   .inputValidator((data) => data)
   .handler(async ({ data, context }) => {
-    assertPayments(context.user);
+    await assertPayments(context);
     const db = context.getBase44().asServiceRole;
     const id = String(data?.id || "");
     const account = await db.entities.BankAccount.get(id);
@@ -344,7 +339,7 @@ export const deleteBankAccount = createServerFn({ method: "POST" })
 export const getPaymentOverview = createServerFn({ method: "GET" })
   .middleware([requireUser])
   .handler(async ({ context }) => {
-    assertPayments(context.user);
+    await assertPayments(context);
     const db = context.getBase44().asServiceRole;
     const [donationRes, gateways, banks, events] = await Promise.all([
       db.entities.Donation.filter({}, { sort: "-created_date", limit: 1000 }),
@@ -387,7 +382,7 @@ export const listTransactions = createServerFn({ method: "GET" })
   .middleware([requireUser])
   .inputValidator((data) => data)
   .handler(async ({ data, context }) => {
-    assertPayments(context.user);
+    await assertPayments(context);
     const db = context.getBase44().asServiceRole;
     const [donationRes, projectRes] = await Promise.all([
       db.entities.Donation.filter({}, { sort: "-created_date", limit: 1000 }),
@@ -463,7 +458,7 @@ export const getPaymentReports = createServerFn({ method: "GET" })
   .middleware([requireUser])
   .inputValidator((data) => data)
   .handler(async ({ data, context }) => {
-    assertPayments(context.user);
+    await assertPayments(context);
     const db = context.getBase44().asServiceRole;
     const range = String(data?.range || "30d");
     const start = new Date();
@@ -513,7 +508,7 @@ export const getPaymentEvents = createServerFn({ method: "GET" })
   .middleware([requireUser])
   .inputValidator((data) => data)
   .handler(async ({ data, context }) => {
-    assertPayments(context.user);
+    await assertPayments(context);
     const db = context.getBase44().asServiceRole;
     const events = list(await db.entities.PaymentEvent.filter({}, { sort: "-created_date", limit: 300 }));
     const search = lower(data?.search);
@@ -531,7 +526,7 @@ export const getPaymentEvents = createServerFn({ method: "GET" })
 export const getBankTransferQueue = createServerFn({ method: "GET" })
   .middleware([requireUser])
   .handler(async ({ context }) => {
-    assertPayments(context.user);
+    await assertPayments(context);
     const db = context.getBase44().asServiceRole;
     const [donationRes, projectRes, accounts] = await Promise.all([
       db.entities.Donation.filter({ payment_method: "bank_transfer" }, { sort: "-created_date", limit: 300 }),
@@ -558,7 +553,7 @@ export const getPaymentProofUrl = createServerFn({ method: "POST" })
   .middleware([requireUser])
   .inputValidator((data) => data)
   .handler(async ({ data, context }) => {
-    assertPayments(context.user);
+    await assertPayments(context);
     const db = context.getBase44().asServiceRole;
     const donation = await db.entities.Donation.get(String(data?.id || ""));
     if (!donation.proof_file_uri) throw Object.assign(new Error("No payment proof uploaded"), { status: 404 });
@@ -573,7 +568,7 @@ export const verifyBankTransfer = createServerFn({ method: "POST" })
   .middleware([requireUser])
   .inputValidator((data) => data)
   .handler(async ({ data, context }) => {
-    assertPayments(context.user);
+    await assertPayments(context);
     const rt = await loadPayments();
     const db = context.getBase44().asServiceRole;
     const donation = await db.entities.Donation.get(String(data?.id || ""));

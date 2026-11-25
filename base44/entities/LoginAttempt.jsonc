@@ -1,0 +1,47 @@
+{
+  "name": "LoginAttempt",
+  "type": "object",
+  "properties": {
+    "email": {
+      "type": "string",
+      "title": "Email"
+    },
+    "attempts": {
+      "type": "number",
+      "title": "Failed attempts"
+    },
+    "locked_until": {
+      "type": "string",
+      "title": "Locked until"
+    },
+    "last_attempt": {
+      "type": "string",
+      "title": "Last attempt"
+    }
+  },
+  "required": [
+    "email"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

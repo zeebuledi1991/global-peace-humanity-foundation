@@ -1,5 +1,5 @@
 import { Lock, Mail, UserPlus } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
 import { AuthLayout } from "@/components/auth/AuthLayout";
@@ -28,6 +28,21 @@ export function RegisterPage() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [mfaChallenge, setMfaChallenge] = useState(null);
+
+  // A signed-in visitor never sees the sign-up form again.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const authed = await base44.auth.isAuthenticated().catch(() => false);
+      if (!authed || cancelled) return;
+      const me = await base44.auth.me().catch(() => null);
+      if (!me || cancelled) return;
+      window.location.href = me.role === "admin" ? "/admin/dashboard" : "/dashboard";
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function register(e) {
     e.preventDefault();
@@ -58,7 +73,8 @@ export function RegisterPage() {
         return;
       }
       if (result?.access_token) base44.auth.setToken(result.access_token);
-      window.location.href = returnTo;
+      // A brand-new account is always a donor: its dashboard is the portal.
+      window.location.href = returnTo && returnTo !== "/" ? returnTo : "/dashboard";
     } catch (err) {
       // Verified server-side but the answer never arrived: the code is spent and
       // there is no token, so the only way forward is a normal sign-in.

@@ -1,5 +1,6 @@
 import { Lock, LogIn, Mail } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { base44 } from "@/api/base44Client";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { AuthError, AuthLink, GoogleButton, OrDivider, SubmitButton } from "@/components/auth/parts";
 import { Input } from "@/components/ui/input";
@@ -13,11 +14,30 @@ import { safeReturnTo } from "@/lib/authReturnTo";
 // goes after signing in — the login gate and the MCP consent page send people here with it.
 export function LoginPage() {
   const returnTo = safeReturnTo();
+  // Where the platform returns people after a social or two-factor step; the
+  // destination there follows the role of the session.
+  const next = returnTo && returnTo !== "/" ? returnTo : "/post-login";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [mfaChallenge, setMfaChallenge] = useState(null);
+
+  // A signed-in visitor never sees the sign-in form again: administrators go to
+  // the admin dashboard, donors to their portal.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const authed = await base44.auth.isAuthenticated().catch(() => false);
+      if (!authed || cancelled) return;
+      const me = await base44.auth.me().catch(() => null);
+      if (!me || cancelled) return;
+      window.location.href = me.role === "admin" ? "/admin/dashboard" : "/dashboard";
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function submit(e) {
     e.preventDefault();
@@ -29,8 +49,18 @@ export function LoginPage() {
         setMfaChallenge(result);
         return;
       }
+      // The destination follows the role the server reports for this session.
+      const me = await base44.auth.me().catch(() => null);
+      const destination =
+        me?.role === "admin"
+          ? returnTo.startsWith("/admin")
+            ? returnTo
+            : "/admin/dashboard"
+          : returnTo && returnTo !== "/"
+            ? returnTo
+            : "/dashboard";
       // A hard redirect: the app re-initializes with the new session.
-      window.location.href = returnTo;
+      window.location.href = destination;
     } catch (err) {
       setError(err.message || "Invalid email or password");
       setBusy(false);
@@ -38,11 +68,11 @@ export function LoginPage() {
   }
 
   // The second sign-in step (authenticator app or text message) replaces the whole page.
-  if (mfaChallenge) return <MfaScreen><MfaFlow challenge={mfaChallenge} returnTo={returnTo} /></MfaScreen>;
+  if (mfaChallenge) return <MfaScreen><MfaFlow challenge={mfaChallenge} returnTo={next} /></MfaScreen>;
 
   return (
     <AuthLayout icon={LogIn} title="Welcome back" subtitle="Log in to your account">
-      <GoogleButton returnTo={returnTo} onError={setError} />
+      <GoogleButton returnTo={next} onError={setError} />
       <OrDivider />
       <AuthError>{error}</AuthError>
       <form onSubmit={submit} className="space-y-4">

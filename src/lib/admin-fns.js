@@ -1,34 +1,17 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireUser } from "@/lib/auth-middleware";
+import { requireAdmin, requireCapability } from "@/lib/admin-guard";
 import { writeAudit, notifyUser, money } from "@/lib/notify";
 import { BRAND } from "@/lib/mailer";
 
 const list = (res) => (Array.isArray(res) ? res : res?.items ?? []);
 const lower = (value) => String(value ?? "").trim().toLowerCase();
 
-// Administrator capabilities. An administrator without an explicit admin_role
-// keeps full access (existing GPHF team accounts), new roles are assigned by a
-// super admin from Admin → Users.
-const CAPABILITIES = {
-  finance: ["super_admin", "administrator", "finance_manager"],
-  projects: ["super_admin", "administrator", "project_manager"],
-  users: ["super_admin", "administrator"],
-};
-
-const roleOf = (user) => user?.admin_role || "super_admin";
-
-function assertAdmin(user) {
-  if (user?.role !== "admin") {
-    throw Object.assign(new Error("Forbidden"), { status: 403, code: "FORBIDDEN" });
-  }
-}
-
-function assertCapability(user, capability) {
-  assertAdmin(user);
-  if (!CAPABILITIES[capability].includes(roleOf(user))) {
-    throw Object.assign(new Error("Your administrator role does not allow this action"), { status: 403 });
-  }
-}
+// Every check re-reads the caller's current user record (see @/lib/admin-guard),
+// so a deactivated administrator loses access immediately and the administrator
+// role can never come from the request.
+const assertAdmin = (context) => requireAdmin(context);
+const assertCapability = (context, capability) => requireCapability(context, capability);
 
 function rangeBounds(data) {
   const range = String(data?.range || "all");
@@ -67,7 +50,7 @@ export const getAdminOverview = createServerFn({ method: "GET" })
   .middleware([requireUser])
   .inputValidator((data) => data)
   .handler(async ({ data, context }) => {
-    assertAdmin(context.user);
+    await assertAdmin(context);
     const db = context.getBase44().asServiceRole;
     const bounds = rangeBounds(data);
 
@@ -192,7 +175,7 @@ export const getAdminDonors = createServerFn({ method: "GET" })
   .middleware([requireUser])
   .inputValidator((data) => data)
   .handler(async ({ data, context }) => {
-    assertAdmin(context.user);
+    await assertAdmin(context);
     const db = context.getBase44().asServiceRole;
     const bounds = rangeBounds(data);
 
@@ -273,7 +256,7 @@ export const getAdminFinance = createServerFn({ method: "GET" })
   .middleware([requireUser])
   .inputValidator((data) => data)
   .handler(async ({ data, context }) => {
-    assertCapability(context.user, "finance");
+    await assertCapability(context, "finance");
     const db = context.getBase44().asServiceRole;
     const bounds = rangeBounds(data);
 
@@ -346,7 +329,7 @@ export const getAdminDonations = createServerFn({ method: "GET" })
   .middleware([requireUser])
   .inputValidator((data) => data)
   .handler(async ({ data, context }) => {
-    assertCapability(context.user, "finance");
+    await assertCapability(context, "finance");
     const db = context.getBase44().asServiceRole;
     const query = data?.status ? { status: data.status } : {};
     const res = await db.entities.Donation.filter(query, { sort: "-created_date", limit: 200 });
@@ -357,7 +340,7 @@ export const getAdminUsers = createServerFn({ method: "GET" })
   .middleware([requireUser])
   .inputValidator((data) => data)
   .handler(async ({ data, context }) => {
-    assertCapability(context.user, "users");
+    await assertCapability(context, "users");
     const db = context.getBase44().asServiceRole;
     const [users, donationRes] = await Promise.all([
       db.entities.User.list("-created_date", 500),
@@ -399,8 +382,8 @@ export const updateUserAccess = createServerFn({ method: "POST" })
   .middleware([requireUser])
   .inputValidator((data) => data)
   .handler(async ({ data, context }) => {
-    assertCapability(context.user, "users");
-    if (roleOf(context.user) !== "super_admin") {
+    const actor = await assertCapability(context, "users");
+    if (actor.admin_role !== "super_admin") {
       throw Object.assign(new Error("Only a super admin can change administrator access"), { status: 403 });
     }
     const db = context.getBase44().asServiceRole;
@@ -435,7 +418,7 @@ export const getAuditLogs = createServerFn({ method: "GET" })
   .middleware([requireUser])
   .inputValidator((data) => data)
   .handler(async ({ data, context }) => {
-    assertCapability(context.user, "users");
+    await assertCapability(context, "users");
     const db = context.getBase44().asServiceRole;
     const res = await db.entities.AuditLog.filter({}, { sort: "-created_date", limit: Number(data?.limit) || 150 });
     const search = lower(data?.search);
@@ -450,7 +433,7 @@ export const updateDonationStatus = createServerFn({ method: "POST" })
   .middleware([requireUser])
   .inputValidator((data) => data)
   .handler(async ({ data, context }) => {
-    assertCapability(context.user, "finance");
+    await assertCapability(context, "finance");
     const db = context.getBase44().asServiceRole;
     const status = String(data?.status || "");
     if (!["pending", "processing", "completed", "failed", "cancelled", "refunded"].includes(status)) {
@@ -566,7 +549,7 @@ export const updateProjectStatus = createServerFn({ method: "POST" })
   .middleware([requireUser])
   .inputValidator((data) => data)
   .handler(async ({ data, context }) => {
-    assertCapability(context.user, "projects");
+    await assertCapability(context, "projects");
     const db = context.getBase44().asServiceRole;
     const id = String(data?.id || "");
     const status = String(data?.status || "");
@@ -626,7 +609,7 @@ export const setProjectPublish = createServerFn({ method: "POST" })
   .middleware([requireUser])
   .inputValidator((data) => data)
   .handler(async ({ data, context }) => {
-    assertCapability(context.user, "projects");
+    await assertCapability(context, "projects");
     const db = context.getBase44().asServiceRole;
     const id = String(data?.id || "");
     const publish = Boolean(data?.is_published);
@@ -645,7 +628,7 @@ export const createProjectUpdate = createServerFn({ method: "POST" })
   .middleware([requireUser])
   .inputValidator((data) => data)
   .handler(async ({ data, context }) => {
-    assertCapability(context.user, "projects");
+    await assertCapability(context, "projects");
     const db = context.getBase44().asServiceRole;
     const projectId = String(data?.project_id || "");
     const title = String(data?.title || "").trim();
@@ -708,7 +691,7 @@ export const getDonorDetail = createServerFn({ method: "GET" })
   .middleware([requireUser])
   .inputValidator((data) => data)
   .handler(async ({ data, context }) => {
-    assertAdmin(context.user);
+    await assertAdmin(context);
     const db = context.getBase44().asServiceRole;
     const email = lower(data?.email);
     if (!email) return { donations: [], projects: [] };
