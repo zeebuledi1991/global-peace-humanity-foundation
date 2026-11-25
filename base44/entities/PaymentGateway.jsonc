@@ -1,0 +1,117 @@
+{
+  "name": "PaymentGateway",
+  "type": "object",
+  "properties": {
+    "provider": {
+      "type": "string",
+      "title": "Provider key",
+      "enum": [
+        "safepay",
+        "payfast",
+        "bank_alfalah",
+        "ubl"
+      ],
+      "enumColors": [
+        "green",
+        "blue",
+        "purple",
+        "yellow"
+      ]
+    },
+    "display_name": {
+      "type": "string",
+      "title": "Display name"
+    },
+    "environment": {
+      "type": "string",
+      "title": "Environment",
+      "enum": [
+        "sandbox",
+        "live"
+      ],
+      "enumColors": [
+        "yellow",
+        "green"
+      ]
+    },
+    "is_enabled": {
+      "type": "boolean",
+      "title": "Available on checkout"
+    },
+    "connection_status": {
+      "type": "string",
+      "title": "Connection status",
+      "enum": [
+        "not_configured",
+        "configured",
+        "connected",
+        "failed"
+      ],
+      "enumColors": [
+        "gray",
+        "yellow",
+        "green",
+        "red"
+      ]
+    },
+    "supported_methods": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Payment methods shown to donors"
+    },
+    "currencies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Currencies"
+    },
+    "last_tested_at": {
+      "type": "string",
+      "title": "Last connection test"
+    },
+    "last_test_message": {
+      "type": "string",
+      "title": "Last test result"
+    },
+    "activated_at": {
+      "type": "string",
+      "title": "Activated at"
+    },
+    "activated_by": {
+      "type": "string",
+      "title": "Activated by"
+    },
+    "display_order": {
+      "type": "number",
+      "title": "Display order"
+    }
+  },
+  "required": [
+    "provider"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

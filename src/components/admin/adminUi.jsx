@@ -23,6 +23,21 @@ const STATUS_TONES = {
   sent: "bg-primary/10 text-primary",
   subscribed: "bg-primary/10 text-primary",
   unsubscribed: "bg-secondary text-muted-foreground",
+  processing: "bg-navy/10 text-navy",
+  not_configured: "bg-secondary text-muted-foreground",
+  configured: "bg-gold/20 text-[#6f5710]",
+  connected: "bg-primary/10 text-primary",
+  gateway_activated: "bg-primary/10 text-primary",
+  gateway_deactivated: "bg-secondary text-muted-foreground",
+  payment_settled: "bg-primary/10 text-primary",
+  bank_transfer_verified: "bg-primary/10 text-primary",
+  bank_transfer_rejected: "bg-destructive/10 text-destructive",
+  payment_failed: "bg-destructive/10 text-destructive",
+  webhook_rejected: "bg-destructive/10 text-destructive",
+  config_updated: "bg-gold/20 text-[#6f5710]",
+  connection_tested: "bg-navy/10 text-navy",
+  checkout_initiated: "bg-navy/10 text-navy",
+  webhook_received: "bg-navy/10 text-navy",
 };
 
 export function StatusBadge({ status }) {

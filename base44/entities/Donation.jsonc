@@ -78,15 +78,40 @@
       "type": "string",
       "title": "Payment method"
     },
+    "gateway_provider": {
+      "type": "string",
+      "title": "Gateway provider key"
+    },
+    "gateway_id": {
+      "type": "string",
+      "title": "Payment gateway record"
+    },
     "payment_reference": {
       "type": "string",
       "title": "Provider payment reference"
+    },
+    "bank_account_id": {
+      "type": "string",
+      "title": "Bank account"
+    },
+    "transfer_reference": {
+      "type": "string",
+      "title": "Bank transfer reference"
+    },
+    "transfer_date": {
+      "type": "string",
+      "title": "Bank transfer date"
+    },
+    "proof_file_uri": {
+      "type": "string",
+      "title": "Payment proof file reference"
     },
     "status": {
       "type": "string",
       "title": "Status",
       "enum": [
         "pending",
+        "processing",
         "completed",
         "failed",
         "cancelled",
@@ -94,6 +119,7 @@
       ],
       "enumColors": [
         "yellow",
+        "blue",
         "green",
         "red",
         "gray",

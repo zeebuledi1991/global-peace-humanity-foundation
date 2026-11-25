@@ -1,0 +1,95 @@
+{
+  "name": "PaymentEvent",
+  "type": "object",
+  "properties": {
+    "provider": {
+      "type": "string",
+      "title": "Provider"
+    },
+    "gateway_id": {
+      "type": "string",
+      "title": "Gateway id"
+    },
+    "type": {
+      "type": "string",
+      "title": "Event type",
+      "enum": [
+        "checkout_initiated",
+        "config_updated",
+        "gateway_activated",
+        "gateway_deactivated",
+        "connection_tested",
+        "webhook_received",
+        "webhook_rejected",
+        "payment_settled",
+        "payment_failed",
+        "bank_transfer_verified",
+        "bank_transfer_rejected",
+        "refund_recorded"
+      ],
+      "enumColors": [
+        "blue",
+        "yellow",
+        "green",
+        "gray",
+        "blue",
+        "blue",
+        "red",
+        "green",
+        "red",
+        "green",
+        "red",
+        "purple"
+      ]
+    },
+    "message": {
+      "type": "string",
+      "title": "Message"
+    },
+    "actor_email": {
+      "type": "string",
+      "title": "Administrator email"
+    },
+    "record_id": {
+      "type": "string",
+      "title": "Donation or record id"
+    },
+    "provider_event_id": {
+      "type": "string",
+      "title": "Provider event id (idempotency)"
+    },
+    "amount": {
+      "type": "number",
+      "title": "Amount"
+    },
+    "currency": {
+      "type": "string",
+      "title": "Currency"
+    }
+  },
+  "required": [
+    "type"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

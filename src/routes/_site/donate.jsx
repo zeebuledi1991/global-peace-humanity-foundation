@@ -3,6 +3,7 @@ import { Building2, CreditCard, FileCheck2, Globe2, ShieldCheck } from "lucide-r
 import PageHero from "@/components/site/PageHero";
 import DonationForm from "@/components/forms/DonationForm";
 import { getCampaigns, getProjects, getSiteSettings } from "@/lib/content-fns";
+import { getCheckoutMethods } from "@/lib/payment-fns";
 
 export const Route = createFileRoute("/_site/donate")({
   validateSearch: (search) => ({
@@ -11,12 +12,13 @@ export const Route = createFileRoute("/_site/donate")({
     project: search.project ? String(search.project) : undefined,
   }),
   loader: async () => {
-    const [campaigns, projects, settings] = await Promise.all([
+    const [campaigns, projects, settings, methods] = await Promise.all([
       getCampaigns(),
       getProjects(),
       getSiteSettings(),
+      getCheckoutMethods(),
     ]);
-    return { campaigns, projects, settings };
+    return { campaigns, projects, settings, methods };
   },
   head: () => ({
     meta: [
@@ -32,7 +34,7 @@ export const Route = createFileRoute("/_site/donate")({
 });
 
 function DonatePage() {
-  const { campaigns, projects, settings } = Route.useLoaderData();
+  const { campaigns, projects, settings, methods } = Route.useLoaderData();
   const search = Route.useSearch();
 
   return (
@@ -49,6 +51,7 @@ function DonatePage() {
             <DonationForm
               campaigns={campaigns || []}
               projects={projects || []}
+              methods={methods || { gateways: [], banks: [] }}
               initialAmount={search.amount}
               initialFrequency={search.frequency}
               initialProject={search.project}
@@ -59,26 +62,43 @@ function DonatePage() {
             <div className="rounded-sm border border-border bg-white p-6">
               <h2 className="text-[17px] font-semibold text-foreground">Payment methods</h2>
               <ul className="mt-4 space-y-4">
-                <li className="flex gap-3">
-                  <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-                  <div>
-                    <p className="text-[14px] font-medium text-foreground">Bank transfer</p>
-                    <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-                      Available now. Transfer instructions appear on your confirmation page and are
-                      emailed to you.
-                    </p>
-                  </div>
-                </li>
-                <li className="flex gap-3">
-                  <CreditCard className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                  <div>
-                    <p className="text-[14px] font-medium text-foreground">Card / hosted checkout</p>
-                    <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-                      Awaiting payment gateway activation. We will list it here once it is live — we do
-                      not accept card payments before then.
-                    </p>
-                  </div>
-                </li>
+                {(methods?.gateways || []).map((gateway) => (
+                  <li key={gateway.id} className="flex gap-3">
+                    <CreditCard className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                    <div>
+                      <p className="text-[14px] font-medium text-foreground">{gateway.name}</p>
+                      <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
+                        {gateway.methods.join(" · ")}. Accepts {gateway.currencies.join(", ")}.
+                        {gateway.supportsRecurring ? " One-time and monthly gifts." : " One-time gifts."}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+                {(methods?.banks || []).length > 0 && (
+                  <li className="flex gap-3">
+                    <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                    <div>
+                      <p className="text-[14px] font-medium text-foreground">Bank transfer</p>
+                      <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
+                        Transfer to {(methods.banks || []).length > 1 ? "one of our accounts" : "our account"} and
+                        submit your transfer reference. Our finance team verifies every transfer before a receipt
+                        is issued.
+                      </p>
+                    </div>
+                  </li>
+                )}
+                {!(methods?.gateways || []).length && (
+                  <li className="flex gap-3">
+                    <CreditCard className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                    <div>
+                      <p className="text-[14px] font-medium text-foreground">Card / hosted checkout</p>
+                      <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
+                        Card gateways are being activated with our banks. Each one appears here the moment it
+                        is live — we never accept card payments before then.
+                      </p>
+                    </div>
+                  </li>
+                )}
                 <li className="flex gap-3">
                   <Globe2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
                   <div>
@@ -122,7 +142,34 @@ function DonatePage() {
               </div>
             </div>
 
-            {settings?.bank_details ? (
+            {(methods?.banks || []).length > 0 ? (
+              <div className="rounded-sm border border-border bg-white p-6">
+                <h2 className="text-[17px] font-semibold text-foreground">Bank transfer details</h2>
+                <div className="mt-3 space-y-3">
+                  {(methods.banks || []).map((account) => (
+                    <div key={account.id} className="rounded-sm border border-border p-3">
+                      <p className="text-[13px] font-semibold text-foreground">{account.bank_name}</p>
+                      <p className="mt-0.5 text-[12px] text-muted-foreground">{account.account_title}</p>
+                      <dl className="mt-2 space-y-1 text-[12px]">
+                        {[
+                          ["Account number", account.account_number],
+                          ["IBAN", account.iban],
+                          ["SWIFT / BIC", account.swift_code],
+                          ["Currency", account.currency],
+                        ]
+                          .filter(([, fieldValue]) => fieldValue)
+                          .map(([label, fieldValue]) => (
+                            <div key={label} className="flex justify-between gap-3">
+                              <dt className="text-muted-foreground">{label}</dt>
+                              <dd className="text-right font-medium text-foreground">{fieldValue}</dd>
+                            </div>
+                          ))}
+                      </dl>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : settings?.bank_details ? (
               <div className="rounded-sm border border-border bg-white p-6">
                 <h2 className="text-[17px] font-semibold text-foreground">Bank transfer details</h2>
                 <p className="mt-3 whitespace-pre-line text-[13px] leading-relaxed text-muted-foreground">

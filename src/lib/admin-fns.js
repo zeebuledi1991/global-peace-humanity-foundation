@@ -453,7 +453,7 @@ export const updateDonationStatus = createServerFn({ method: "POST" })
     assertCapability(context.user, "finance");
     const db = context.getBase44().asServiceRole;
     const status = String(data?.status || "");
-    if (!["pending", "completed", "failed", "cancelled", "refunded"].includes(status)) {
+    if (!["pending", "processing", "completed", "failed", "cancelled", "refunded"].includes(status)) {
       throw Object.assign(new Error("Invalid status"), { status: 400 });
     }
 

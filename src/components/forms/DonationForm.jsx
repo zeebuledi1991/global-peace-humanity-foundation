@@ -2,7 +2,10 @@ import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Check, Loader2, Lock, Repeat, ShieldCheck } from "lucide-react";
-import { submitDonation } from "@/lib/forms-fns";
+import { startGatewayPayment, submitBankTransferDonation } from "@/lib/payment-fns";
+import { submitCheckoutAction } from "@/lib/payments/checkout";
+import PaymentMethodPicker from "@/components/checkout/PaymentMethodPicker";
+import BankTransferFields from "@/components/checkout/BankTransferFields";
 import { COUNTRIES, CURRENCIES, SUGGESTED_AMOUNTS } from "@/content/options";
 import { inputClass, labelClass, selectClass, textareaClass } from "@/components/site/formStyles";
 import { cn } from "@/lib/utils";
@@ -10,16 +13,28 @@ import { cn } from "@/lib/utils";
 export default function DonationForm({
   campaigns = [],
   projects = [],
+  methods = { gateways: [], banks: [] },
   initialAmount,
   initialFrequency,
   initialProject,
 }) {
   const navigate = useNavigate();
+  const gateways = methods.gateways || [];
+  const banks = methods.banks || [];
+
   const [frequency, setFrequency] = useState(initialFrequency === "monthly" ? "monthly" : "one_time");
   const [amount, setAmount] = useState(
     SUGGESTED_AMOUNTS.includes(Number(initialAmount)) ? String(initialAmount) : "50"
   );
-  const [currency, setCurrency] = useState("USD");
+  const [currency, setCurrency] = useState(gateways[0]?.currencies?.[0] || "USD");
+  const [method, setMethod] = useState(gateways[0]?.id || (banks.length ? "bank_transfer" : ""));
+  const [bank, setBank] = useState({
+    bank_account_id: banks[0]?.id || "",
+    transfer_reference: "",
+    transfer_date: "",
+    proof_file_uri: "",
+    proof_name: "",
+  });
   const [values, setValues] = useState({
     donor_name: "",
     donor_email: "",
@@ -34,37 +49,82 @@ export default function DonationForm({
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
+  const gateway = gateways.find((entry) => entry.id === method) || null;
+  const isBank = method === "bank_transfer";
+  const currencyOptions = gateway
+    ? CURRENCIES.filter((option) => gateway.currencies.includes(option.code))
+    : CURRENCIES;
+  const monthlySupported = !gateway || gateway.supportsRecurring;
+
   const update = (field) => (event) => setValues((prev) => ({ ...prev, [field]: event.target.value }));
+
+  const chooseMethod = (next) => {
+    setMethod(next);
+    setErrors({});
+    const nextGateway = gateways.find((entry) => entry.id === next);
+    if (nextGateway) {
+      if (!nextGateway.currencies.includes(currency)) setCurrency(nextGateway.currencies[0] || currency);
+      if (!nextGateway.supportsRecurring && frequency === "monthly") setFrequency("one_time");
+    }
+  };
 
   const onSubmit = async (event) => {
     event.preventDefault();
     const numeric = Number(amount);
     const nextErrors = {};
+    if (!method) nextErrors.method = "Choose a payment method.";
     if (!numeric || numeric < 1) nextErrors.amount = "Enter an amount of at least 1.";
     if (values.donor_name.trim().length < 2) nextErrors.donor_name = "Please enter your name.";
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(values.donor_email.trim()))
       nextErrors.donor_email = "Enter a valid email address.";
     if (!values.country) nextErrors.country = "Please select your country.";
+    if (isBank && bank.transfer_reference.trim().length < 2)
+      nextErrors.transfer_reference = "Add the reference your bank shows for this transfer.";
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
     setLoading(true);
+    const payload = {
+      donor_name: values.donor_name,
+      donor_email: values.donor_email,
+      donor_phone: values.donor_phone,
+      country: values.country,
+      amount: numeric,
+      currency,
+      frequency,
+      is_anonymous: anonymous,
+      dedication: values.dedication,
+      campaign_id: values.campaign_id,
+      project_id: values.project_id,
+      website: values.website,
+    };
+
     try {
-      const result = await submitDonation({
-        data: {
-          ...values,
-          amount: numeric,
-          currency,
-          frequency,
-          is_anonymous: anonymous,
-          payment_method: "bank_transfer",
-        },
-      });
-      if (!result?.reference) {
-        toast.error("We could not record your donation. Please try again.");
+      if (isBank) {
+        const result = await submitBankTransferDonation({
+          data: {
+            ...payload,
+            bank_account_id: bank.bank_account_id || banks[0]?.id,
+            transfer_reference: bank.transfer_reference,
+            transfer_date: bank.transfer_date || "",
+            proof_file_uri: bank.proof_file_uri || "",
+          },
+        });
+        if (!result?.ok || !result?.reference) {
+          toast.error(result?.error || "We could not record your transfer. Please try again.");
+          return;
+        }
+        navigate({ to: "/donation-confirmation", search: { ref: result.reference } });
         return;
       }
-      navigate({ to: "/donation-confirmation", search: { ref: result.reference } });
+
+      const result = await startGatewayPayment({ data: { ...payload, gateway_id: method } });
+      if (!result?.ok) {
+        toast.error(result?.error || "The payment could not be started. Please try again.");
+        return;
+      }
+      toast.success("Taking you to the secure checkout…");
+      submitCheckoutAction(result.action);
     } catch (error) {
       toast.error(error?.message || "We could not record your donation. Please try again.");
     } finally {
@@ -82,10 +142,11 @@ export default function DonationForm({
           <button
             key={option.value}
             type="button"
+            disabled={option.value === "monthly" && !monthlySupported}
             onClick={() => setFrequency(option.value)}
             aria-pressed={frequency === option.value}
             className={cn(
-              "flex flex-1 items-center justify-center gap-2 rounded-sm px-4 py-3 text-[12px] font-semibold uppercase tracking-[0.14em] transition-colors",
+              "flex flex-1 items-center justify-center gap-2 rounded-sm px-4 py-3 text-[12px] font-semibold uppercase tracking-[0.14em] transition-colors disabled:cursor-not-allowed disabled:opacity-40",
               frequency === option.value ? "bg-primary text-white" : "text-foreground/70 hover:text-primary"
             )}
           >
@@ -143,7 +204,7 @@ export default function DonationForm({
               onChange={(event) => setCurrency(event.target.value)}
               className={selectClass}
             >
-              {CURRENCIES.map((option) => (
+              {currencyOptions.map((option) => (
                 <option key={option.code} value={option.code}>
                   {option.label}
                 </option>
@@ -153,8 +214,8 @@ export default function DonationForm({
         </div>
         <p className="mt-2 text-[12px] text-muted-foreground">
           {frequency === "monthly"
-            ? "You are setting up a monthly commitment. Recurring billing begins once the payment gateway is active."
-            : "You are making a one-time pledge."}
+            ? "You are setting up a monthly commitment with the selected provider."
+            : "You are making a one-time gift."}
         </p>
       </div>
 
@@ -282,26 +343,17 @@ export default function DonationForm({
 
       <div className="mt-6">
         <span className={labelClass}>Payment method</span>
-        <div className="space-y-2">
-          <div className="flex items-start gap-3 rounded-sm border border-primary bg-primary/5 p-4">
-            <input type="radio" checked readOnly className="mt-1 h-4 w-4 accent-[#174D38]" aria-label="Bank transfer" />
-            <div>
-              <p className="text-[14px] font-semibold text-foreground">Bank transfer</p>
-              <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-                Available now. Transfer instructions are shown on the confirmation page.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3 rounded-sm border border-border bg-secondary/40 p-4 opacity-70">
-            <input type="radio" disabled className="mt-1 h-4 w-4" aria-label="Card payment unavailable" />
-            <div>
-              <p className="text-[14px] font-semibold text-foreground">Card / hosted checkout</p>
-              <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-                Awaiting payment gateway activation. Card payments are not accepted yet.
-              </p>
-            </div>
-          </div>
-        </div>
+        <PaymentMethodPicker
+          gateways={gateways}
+          banks={banks}
+          value={method}
+          onChange={chooseMethod}
+          monthly={frequency === "monthly"}
+        />
+        {errors.method && <p className="mt-1 text-[12px] text-destructive">{errors.method}</p>}
+        {isBank && banks.length > 0 && (
+          <BankTransferFields banks={banks} value={bank} onChange={(patch) => setBank((prev) => ({ ...prev, ...patch }))} error={errors} />
+        )}
       </div>
 
       <input
@@ -316,17 +368,17 @@ export default function DonationForm({
 
       <button
         type="submit"
-        disabled={loading}
+        disabled={loading || !method}
         className="mt-6 inline-flex h-13 w-full items-center justify-center gap-2 rounded-sm bg-primary px-7 py-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-foreground disabled:opacity-60"
       >
         {loading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
-        Continue to confirmation
+        {isBank ? "Submit transfer for verification" : "Continue to secure checkout"}
       </button>
 
       <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] text-muted-foreground">
         <span className="inline-flex items-center gap-1.5">
           <Lock className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
-          Card details are never stored here
+          Card details are entered on the provider's secure page, never here
         </span>
         <span className="inline-flex items-center gap-1.5">
           <ShieldCheck className="h-3.5 w-3.5 text-primary" aria-hidden="true" />

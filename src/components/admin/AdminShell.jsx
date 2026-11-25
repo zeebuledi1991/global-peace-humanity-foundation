@@ -2,6 +2,7 @@ import { Link, Outlet, useRouterState } from "@tanstack/react-router";
 import {
   BookOpen,
   ClipboardList,
+  CreditCard,
   FileText,
   FolderKanban,
   HandCoins,
@@ -31,6 +32,7 @@ const NAV = [
   { to: "/admin", label: "Overview", icon: LayoutDashboard, roles: ALL },
   { to: "/admin/finance", label: "Finance", icon: Wallet, roles: FINANCE },
   { to: "/admin/donations", label: "Donations", icon: HandCoins, roles: FINANCE },
+  { to: "/admin/payments", label: "Payment Management", icon: CreditCard, roles: FINANCE },
   { to: "/admin/donors", label: "Donors", icon: Users, roles: ALL },
   { to: "/admin/projects", label: "Projects", icon: FolderKanban, roles: PROJECTS },
   { to: "/admin/programs", label: "Programs", icon: BookOpen, roles: CONTENT },

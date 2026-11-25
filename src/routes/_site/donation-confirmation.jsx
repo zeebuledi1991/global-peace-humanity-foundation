@@ -3,6 +3,7 @@ import { CheckCircle2, Clock, FileText, Printer, XCircle } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { getDonationReceipt } from "@/lib/forms-fns";
 import { getSiteSettings } from "@/lib/content-fns";
+import { getBankTransferInstructions } from "@/lib/payment-fns";
 
 export const Route = createFileRoute("/_site/donation-confirmation")({
   validateSearch: (search) => ({
@@ -10,11 +11,12 @@ export const Route = createFileRoute("/_site/donation-confirmation")({
   }),
   loaderDeps: ({ search }) => ({ ref: search.ref }),
   loader: async ({ deps }) => {
-    const [donation, settings] = await Promise.all([
+    const [donation, settings, bank] = await Promise.all([
       deps.ref ? getDonationReceipt({ data: { reference: deps.ref } }) : Promise.resolve(null),
       getSiteSettings(),
+      deps.ref ? getBankTransferInstructions({ data: { reference: deps.ref } }).catch(() => null) : Promise.resolve(null),
     ]);
-    return { donation, settings };
+    return { donation, settings, bank };
   },
   head: () => ({
     meta: [
@@ -43,7 +45,7 @@ const STATUS_META = {
 };
 
 function ConfirmationPage() {
-  const { donation, settings } = Route.useLoaderData();
+  const { donation, settings, bank } = Route.useLoaderData();
 
   if (!donation) {
     return (
@@ -160,7 +162,38 @@ function ConfirmationPage() {
                   reference <span className="font-semibold text-foreground">{donation.reference}</span> so
                   we can match it to your pledge.
                 </p>
-                {settings?.bank_details ? (
+                {bank ? (
+                  <div className="mt-4 rounded-sm border border-border bg-white p-4">
+                    <p className="text-[13px] font-semibold text-foreground">
+                      {bank.bank_name} · {bank.account_title}
+                    </p>
+                    <dl className="mt-2 space-y-1 text-[12.5px]">
+                      {[
+                        ["Account number", bank.account_number],
+                        ["IBAN", bank.iban],
+                        ["SWIFT / BIC", bank.swift_code],
+                        ["Branch", bank.branch_name],
+                        ["Currency", bank.currency],
+                      ]
+                        .filter(([, fieldValue]) => fieldValue)
+                        .map(([label, fieldValue]) => (
+                          <div key={label} className="flex justify-between gap-3">
+                            <dt className="text-muted-foreground">{label}</dt>
+                            <dd className="text-right font-medium text-foreground">{fieldValue}</dd>
+                          </div>
+                        ))}
+                    </dl>
+                    {bank.instructions && (
+                      <p className="mt-2 text-[12px] leading-relaxed text-muted-foreground">{bank.instructions}</p>
+                    )}
+                    {bank.transfer_reference && (
+                      <p className="mt-2 text-[12px] text-muted-foreground">
+                        Your submitted transfer reference:{" "}
+                        <span className="font-medium text-foreground">{bank.transfer_reference}</span>
+                      </p>
+                    )}
+                  </div>
+                ) : settings?.bank_details ? (
                   <p className="mt-4 whitespace-pre-line rounded-sm border border-border bg-white p-4 text-[13px] leading-relaxed text-foreground/80">
                     {settings.bank_details}
                   </p>
