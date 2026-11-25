@@ -58,6 +58,22 @@
       "type": "string",
       "title": "Project"
     },
+    "user_id": {
+      "type": "string",
+      "title": "Registered donor account"
+    },
+    "donor_type": {
+      "type": "string",
+      "title": "Donor type",
+      "enum": [
+        "registered",
+        "guest"
+      ],
+      "enumColors": [
+        "green",
+        "gray"
+      ]
+    },
     "payment_method": {
       "type": "string",
       "title": "Payment method"
@@ -73,13 +89,15 @@
         "pending",
         "completed",
         "failed",
-        "cancelled"
+        "cancelled",
+        "refunded"
       ],
       "enumColors": [
         "yellow",
         "green",
         "red",
-        "gray"
+        "gray",
+        "purple"
       ]
     },
     "receipt_number": {
@@ -89,6 +107,10 @@
     "verified_date": {
       "type": "string",
       "title": "Verification date"
+    },
+    "verified_by": {
+      "type": "string",
+      "title": "Verified by"
     },
     "admin_notes": {
       "type": "string",

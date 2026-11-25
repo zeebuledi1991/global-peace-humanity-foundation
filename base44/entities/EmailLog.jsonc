@@ -1,0 +1,65 @@
+{
+  "name": "EmailLog",
+  "type": "object",
+  "properties": {
+    "to_email": {
+      "type": "string",
+      "title": "Recipient"
+    },
+    "template": {
+      "type": "string",
+      "title": "Template"
+    },
+    "subject": {
+      "type": "string",
+      "title": "Subject"
+    },
+    "status": {
+      "type": "string",
+      "title": "Status",
+      "enum": [
+        "sent",
+        "failed"
+      ],
+      "enumColors": [
+        "green",
+        "red"
+      ]
+    },
+    "error": {
+      "type": "string",
+      "title": "Error"
+    },
+    "related_id": {
+      "type": "string",
+      "title": "Related record id"
+    }
+  },
+  "required": [
+    "to_email",
+    "template",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

@@ -1,4 +1,6 @@
 {
+  "name": "User",
+  "type": "object",
   "properties": {
     "role": {
       "type": "string",
@@ -7,11 +9,71 @@
         "admin",
         "user"
       ]
+    },
+    "country": {
+      "type": "string",
+      "title": "Country"
+    },
+    "phone": {
+      "type": "string",
+      "title": "Phone number"
+    },
+    "preferred_payment_method": {
+      "type": "string",
+      "title": "Preferred payment method",
+      "enum": [
+        "bank_transfer",
+        "card"
+      ],
+      "enumColors": [
+        "blue",
+        "purple"
+      ]
+    },
+    "admin_role": {
+      "type": "string",
+      "title": "Administrator role",
+      "enum": [
+        "super_admin",
+        "administrator",
+        "finance_manager",
+        "project_manager"
+      ],
+      "enumColors": [
+        "purple",
+        "blue",
+        "green",
+        "yellow"
+      ],
+      "rls": {
+        "update": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
+    },
+    "account_status": {
+      "type": "string",
+      "title": "Account status",
+      "enum": [
+        "active",
+        "suspended"
+      ],
+      "enumColors": [
+        "green",
+        "red"
+      ],
+      "rls": {
+        "update": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
     }
   },
   "required": [
     "role"
-  ],
-  "name": "User",
-  "type": "object"
+  ]
 }

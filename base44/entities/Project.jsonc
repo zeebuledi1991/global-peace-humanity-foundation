@@ -10,18 +10,28 @@
       "type": "string",
       "title": "Location"
     },
+    "category": {
+      "type": "string",
+      "title": "Project category"
+    },
     "status": {
       "type": "string",
       "title": "Status",
       "enum": [
-        "ongoing",
+        "draft",
+        "upcoming",
+        "active",
+        "paused",
         "completed",
-        "upcoming"
+        "closed"
       ],
       "enumColors": [
+        "gray",
+        "yellow",
         "green",
+        "purple",
         "blue",
-        "yellow"
+        "red"
       ]
     },
     "summary": {
@@ -47,6 +57,13 @@
       "type": "string",
       "title": "Image description"
     },
+    "gallery": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Project gallery image URLs"
+    },
     "program_slug": {
       "type": "string",
       "title": "Related program slug"
@@ -69,7 +86,7 @@
     },
     "end_date": {
       "type": "string",
-      "title": "End date"
+      "title": "Expected completion date"
     },
     "is_featured": {
       "type": "boolean",

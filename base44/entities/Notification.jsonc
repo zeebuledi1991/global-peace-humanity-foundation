@@ -1,0 +1,82 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "title": "Recipient user id"
+    },
+    "title": {
+      "type": "string",
+      "title": "Title"
+    },
+    "message": {
+      "type": "string",
+      "title": "Message"
+    },
+    "type": {
+      "type": "string",
+      "title": "Type",
+      "enum": [
+        "donation",
+        "project",
+        "account",
+        "announcement"
+      ],
+      "enumColors": [
+        "green",
+        "blue",
+        "yellow",
+        "purple"
+      ]
+    },
+    "link": {
+      "type": "string",
+      "title": "Link"
+    },
+    "is_read": {
+      "type": "boolean",
+      "title": "Read"
+    }
+  },
+  "required": [
+    "user_id",
+    "title"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

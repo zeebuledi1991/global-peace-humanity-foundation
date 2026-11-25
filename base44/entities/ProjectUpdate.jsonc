@@ -1,0 +1,52 @@
+{
+  "name": "ProjectUpdate",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "title": "Project id"
+    },
+    "title": {
+      "type": "string",
+      "title": "Update title"
+    },
+    "body": {
+      "type": "string",
+      "title": "Update text"
+    },
+    "image_url": {
+      "type": "string",
+      "title": "Image URL"
+    },
+    "author": {
+      "type": "string",
+      "title": "Published by"
+    },
+    "is_published": {
+      "type": "boolean",
+      "title": "Published"
+    }
+  },
+  "required": [
+    "project_id",
+    "title"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
