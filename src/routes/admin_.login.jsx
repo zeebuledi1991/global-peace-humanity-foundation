@@ -6,7 +6,6 @@ import Logo from "@/components/site/Logo";
 import { adminButton, adminInput, adminLabel } from "@/components/admin/adminUi";
 import { continueMfa, loginWithMfa } from "@/lib/authMfa";
 import { getAdminSession, recordAdminSignIn } from "@/lib/admin-access-fns";
-import { checkLoginThrottle, clearLoginFailures, recordLoginFailure } from "@/lib/login-security-fns";
 
 export const Route = createFileRoute("/admin_/login")({
   ssr: false,
@@ -32,16 +31,6 @@ function AdminLoginPage() {
     const address = email.trim();
 
     try {
-      // Brute-force protection: an address is locked briefly after repeated failures.
-      const throttle = await checkLoginThrottle({ data: { email: address } }).catch(() => ({ blocked: false }));
-      if (throttle.blocked) {
-        setError(
-          `Too many failed attempts. Try again in ${throttle.minutes} minute${throttle.minutes === 1 ? "" : "s"}.`
-        );
-        setBusy(false);
-        return;
-      }
-
       const result = await loginWithMfa(address, password);
       if (result?.mfa_required) {
         await continueMfa(result, "/post-login");
@@ -56,7 +45,6 @@ function AdminLoginPage() {
         return;
       }
       if (!session.isAdmin) {
-        await clearLoginFailures({ data: { email: address } }).catch(() => {});
         await base44.auth.logout(window.location.origin);
         setError(
           session?.reason === "deactivated"
@@ -67,16 +55,10 @@ function AdminLoginPage() {
         return;
       }
 
-      await clearLoginFailures({ data: { email: address } }).catch(() => {});
       await recordAdminSignIn().catch(() => {});
       window.location.href = "/admin/dashboard";
     } catch (err) {
-      const failure = await recordLoginFailure({ data: { email: address } }).catch(() => null);
-      setError(
-        failure?.blocked
-          ? `Too many failed attempts. Try again in ${failure.minutes} minutes.`
-          : err?.message || "We could not sign you in."
-      );
+      setError(err?.message || "We could not sign you in.");
       setBusy(false);
     }
   };

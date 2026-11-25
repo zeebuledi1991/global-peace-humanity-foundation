@@ -11,6 +11,30 @@ const first = (res) => list(res)[0] || null;
 const lower = (value) => String(value ?? "").trim().toLowerCase();
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
+// Donor-supplied text ends up inside transactional email bodies, so it is reduced
+// to the characters a real name or bank reference can contain before it is stored.
+const cleanName = (value) =>
+  String(value || "")
+    .replace(/[^\p{L}\p{M} '-]/gu, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 120);
+
+const cleanReference = (value) =>
+  String(value || "")
+    .replace(/[^A-Za-z0-9 ._#-]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 120);
+
+// A payment proof must be a private-storage reference to a file uploaded for this
+// donation — never a URL, a traversal path, or another record's file.
+const PROOF_URI = /^mp\/private\/[A-Za-z0-9]+\/(?:[A-Za-z0-9._-]+\/)*[A-Za-z0-9._-]+$/;
+const isProofUri = (value) => {
+  const uri = String(value || "").trim();
+  return uri.length >= 8 && uri.length <= 400 && PROOF_URI.test(uri) && !uri.includes("..");
+};
+
 // Server-only helpers (credential vault, provider calls, settlement) are loaded
 // inside the handlers so they never enter the browser bundle.
 async function loadPayments() {
@@ -556,7 +580,16 @@ export const getPaymentProofUrl = createServerFn({ method: "POST" })
     await assertPayments(context);
     const db = context.getBase44().asServiceRole;
     const donation = await db.entities.Donation.get(String(data?.id || ""));
-    if (!donation.proof_file_uri) throw Object.assign(new Error("No payment proof uploaded"), { status: 404 });
+    if (!donation.proof_file_uri || !isProofUri(donation.proof_file_uri)) {
+      throw Object.assign(new Error("No payment proof uploaded"), { status: 404 });
+    }
+    // Never sign one of the foundation's own documents through the payment queue.
+    const usedByDocument = list(
+      await db.entities.Document.filter({ file_uri: donation.proof_file_uri }, { limit: 1 })
+    );
+    if (usedByDocument.length) {
+      throw Object.assign(new Error("That file is not a payment proof"), { status: 400 });
+    }
     const { signed_url } = await db.integrations.Core.CreateFileSignedUrl({
       file_uri: donation.proof_file_uri,
       expires_in: 600,
@@ -716,9 +749,14 @@ export const startGatewayPayment = createServerFn({ method: "POST" })
       .catch(() => null);
     const linked = donor && lower(donor.email) === lower(data.donor_email) ? donor.id : "";
 
+    const donorName = cleanName(data.donor_name);
+    if (donorName.length < 2) {
+      return { ok: false, error: "Please enter the donor name as it should appear on the receipt." };
+    }
+
     const donation = await db.entities.Donation.create({
       reference: reference("GPHF"),
-      donor_name: data.donor_name,
+      donor_name: donorName,
       donor_email: data.donor_email,
       user_id: linked,
       donor_type: linked ? "registered" : "guest",
@@ -797,9 +835,34 @@ export const submitBankTransferDonation = createServerFn({ method: "POST" })
       .catch(() => null);
     const linked = donor && lower(donor.email) === lower(data.donor_email) ? donor.id : "";
 
+    const donorName = cleanName(data.donor_name);
+    const transferReference = cleanReference(data.transfer_reference);
+    if (donorName.length < 2) {
+      return { ok: false, error: "Please enter the donor name as it should appear on the receipt." };
+    }
+    if (transferReference.length < 2) {
+      return { ok: false, error: "Please enter your bank transfer reference using letters and numbers." };
+    }
+
+    const proofUri = String(data.proof_file_uri || "").trim();
+    if (proofUri) {
+      // The proof must be the private file this donor uploaded for this donation:
+      // never a URL, a traversal path, or another record's file.
+      if (!isProofUri(proofUri) || (linked && !proofUri.includes(`/app-users/${linked}/`))) {
+        return { ok: false, error: "That payment proof could not be attached. Please upload the file again." };
+      }
+      const [proofInUse, documentUse] = await Promise.all([
+        db.entities.Donation.filter({ proof_file_uri: proofUri }, { limit: 1 }),
+        db.entities.Document.filter({ file_uri: proofUri }, { limit: 1 }),
+      ]);
+      if (list(proofInUse).length || list(documentUse).length) {
+        return { ok: false, error: "That payment proof could not be attached. Please upload the file again." };
+      }
+    }
+
     const donation = await db.entities.Donation.create({
       reference: reference("GPHF"),
-      donor_name: data.donor_name,
+      donor_name: donorName,
       donor_email: data.donor_email,
       user_id: linked,
       donor_type: linked ? "registered" : "guest",
@@ -815,9 +878,9 @@ export const submitBankTransferDonation = createServerFn({ method: "POST" })
       payment_method: "bank_transfer",
       gateway_provider: "bank_transfer",
       bank_account_id: account.id,
-      transfer_reference: data.transfer_reference,
+      transfer_reference: transferReference,
       transfer_date: data.transfer_date || "",
-      proof_file_uri: data.proof_file_uri || "",
+      proof_file_uri: proofUri,
       status: "pending",
     });
 

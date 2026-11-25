@@ -48,7 +48,7 @@
       "rls": {
         "update": {
           "user_condition": {
-            "data.admin_role": "super_admin"
+            "collaborator_role": "editor"
           }
         }
       }
@@ -67,7 +67,7 @@
       "rls": {
         "update": {
           "user_condition": {
-            "data.admin_role": "super_admin"
+            "collaborator_role": "editor"
           }
         }
       }
@@ -78,7 +78,7 @@
       "rls": {
         "update": {
           "user_condition": {
-            "data.admin_role": "super_admin"
+            "collaborator_role": "editor"
           }
         }
       }
